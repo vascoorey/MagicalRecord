@@ -22,6 +22,8 @@
 
 + (instancetype) MR_findFirst;
 + (instancetype) MR_findFirstInContext:(NSManagedObjectContext *)context;
++ (instancetype) MR_findRandom;
++ (instancetype) MR_findRandomInContext:(NSManagedObjectContext *)context;
 + (instancetype) MR_findFirstWithPredicate:(NSPredicate *)searchTerm;
 + (instancetype) MR_findFirstWithPredicate:(NSPredicate *)searchTerm inContext:(NSManagedObjectContext *)context;
 + (instancetype) MR_findFirstWithPredicate:(NSPredicate *)searchterm sortedBy:(NSString *)property ascending:(BOOL)ascending;

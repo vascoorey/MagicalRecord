@@ -15,6 +15,8 @@
 
 + (NSFetchRequest *) MR_requestAll;
 + (NSFetchRequest *) MR_requestAllInContext:(NSManagedObjectContext *)context;
++ (NSFetchRequest *) MR_requestRandom;
++ (NSFetchRequest *) MR_requestRandomInContext:(NSManagedObjectContext *)context;
 + (NSFetchRequest *) MR_requestAllWithPredicate:(NSPredicate *)searchTerm;
 + (NSFetchRequest *) MR_requestAllWithPredicate:(NSPredicate *)searchTerm inContext:(NSManagedObjectContext *)context;
 + (NSFetchRequest *) MR_requestAllWhere:(NSString *)property isEqualTo:(id)value;

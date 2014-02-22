@@ -9,6 +9,7 @@
 #import "NSManagedObject+MagicalRequests.h"
 #import "NSManagedObject+MagicalRecord.h"
 #import "NSManagedObjectContext+MagicalThreading.h"
+#import "NSManagedObject+MagicalAggregation.h"
 
 @implementation NSManagedObject (MagicalRequests)
 
@@ -26,6 +27,22 @@
 	return [self MR_createFetchRequestInContext:[NSManagedObjectContext MR_contextForCurrentThread]];
 }
 
++ (NSFetchRequest *) MR_requestRandomInContext:(NSManagedObjectContext *)context
+{
+    NSFetchRequest *request = [self MR_createFetchRequestInContext:context];
+    NSUInteger count = [self MR_countOfEntitiesWithContext:context];
+    if(count)
+    {
+        request.fetchLimit = 1;
+        request.fetchOffset = arc4random_uniform(count);
+    }
+    return request;
+}
+
++ (NSFetchRequest *) MR_requestRandom
+{
+    return [self MR_requestRandomInContext:[NSManagedObjectContext MR_contextForCurrentThread]];
+}
 
 + (NSFetchRequest *) MR_requestAll
 {

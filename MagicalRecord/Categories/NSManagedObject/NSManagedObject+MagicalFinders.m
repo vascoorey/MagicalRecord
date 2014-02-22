@@ -86,6 +86,16 @@
 	return [self MR_findFirstInContext:[NSManagedObjectContext MR_contextForCurrentThread]];
 }
 
++ (id) MR_findRandomInContext:(NSManagedObjectContext *)context
+{
+    return [self MR_executeFetchRequestAndReturnFirstObject:[self MR_requestRandomInContext:context] inContext:context];
+}
+
++ (id) MR_findRandom
+{
+    return [self MR_executeFetchRequestAndReturnFirstObject:[self MR_requestRandom]];
+}
+
 + (id) MR_findFirstByAttribute:(NSString *)attribute withValue:(id)searchValue inContext:(NSManagedObjectContext *)context
 {	
 	NSFetchRequest *request = [self MR_requestFirstByAttribute:attribute withValue:searchValue inContext:context];
