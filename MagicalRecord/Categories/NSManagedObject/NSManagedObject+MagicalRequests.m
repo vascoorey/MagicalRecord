@@ -31,11 +31,9 @@
 {
     NSFetchRequest *request = [self MR_createFetchRequestInContext:context];
     NSUInteger count = [self MR_countOfEntitiesWithContext:context];
-    if(count)
-    {
-        request.fetchLimit = 1;
-        request.fetchOffset = arc4random_uniform(count);
-    }
+    NSUInteger offset = arc4random_uniform((u_int32_t)count);
+    [request setFetchOffset:offset];
+    
     return request;
 }
 

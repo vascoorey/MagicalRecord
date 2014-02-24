@@ -48,6 +48,52 @@
     XCTAssertEqualObjects([testRequest predicate], [NSPredicate predicateWithFormat:@"mappedStringAttribute = nil"], @"Predicate objects should be equal");
 }
 
+- (void)testCanRequestRandomEntity
+{
+    NSFetchRequest *testRequest = [SingleRelatedEntity MR_requestRandom];
+    
+    XCTAssertEqualObjects([[testRequest entity] name], NSStringFromClass([SingleRelatedEntity class]), @"Entity name should be the string representation of the entity's class");
+}
+
+- (void)testCanGetRandomInstance
+{
+    // Test with no instances
+    SingleRelatedEntity *random = [SingleRelatedEntity MR_findRandom];
+    XCTAssertNil(random, @"Returned instance should be nil");
+    
+    // Test with single instance
+    SingleRelatedEntity *instance = [SingleRelatedEntity MR_createInContext:[NSManagedObjectContext MR_defaultContext]];
+    [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
+    
+    random = [SingleRelatedEntity MR_findRandom];
+    
+    XCTAssertNotNil(random, @"Returned instance should not be nil");
+    XCTAssertEqualObjects(instance, random, @"Returned instance should be equal to the only instance that has been created");
+    
+    // Test with multiple instances
+    NSInteger numberOfTestEntitiesToCreate = 20;
+    for(int i = 0; i < numberOfTestEntitiesToCreate; i ++)
+    {
+        SingleRelatedEntity *instance = [SingleRelatedEntity MR_createInContext:[NSManagedObjectContext MR_defaultContext]];
+      instance.mappedStringAttribute = [NSString stringWithFormat:@"%i", i];
+    }
+    [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
+  
+  NSLog(@"%@", [SingleRelatedEntity MR_findAll]);
+  
+    random = [SingleRelatedEntity MR_findRandom];
+    
+    XCTAssertNotNil(random, @"Random instance should not be nil");
+//    [MagicalRecord saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
+//        for(int i = 0; i < numberOfTestEntitiesToCreate; i++)
+//        {
+//            [SingleRelatedEntity MR_createInContext:localContext];
+//        }
+//    }];
+//    
+//    NSManagedObject *randomInstance = [SingleRelatedEntity MR_findRandom];
+}
+
 - (void)testCanGetEntityDescriptionFromEntityClass
 {
     NSEntityDescription *testDescription = [SingleRelatedEntity MR_entityDescription];

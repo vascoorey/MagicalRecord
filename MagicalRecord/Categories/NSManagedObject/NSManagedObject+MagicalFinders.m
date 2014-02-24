@@ -88,12 +88,12 @@
 
 + (id) MR_findRandomInContext:(NSManagedObjectContext *)context
 {
-    return [self MR_executeFetchRequestAndReturnFirstObject:[self MR_requestRandomInContext:context] inContext:context];
+    return [[self MR_executeFetchRequest:[self MR_requestRandomInContext:context] inContext:context] firstObject];
 }
 
 + (id) MR_findRandom
 {
-    return [self MR_executeFetchRequestAndReturnFirstObject:[self MR_requestRandom]];
+    return [[self MR_executeFetchRequest:[self MR_requestRandom]] firstObject];
 }
 
 + (id) MR_findFirstByAttribute:(NSString *)attribute withValue:(id)searchValue inContext:(NSManagedObjectContext *)context
