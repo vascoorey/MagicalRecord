@@ -37,15 +37,35 @@ NSDate *MR_dateFromString(NSString *value, NSString *format)
         return nil;
     }
 
-    struct tm tm;
-    time_t t;
+    static BOOL is32bit = NO;
 
-    strptime([value UTF8String],
-             "%Y-%m-%dT%H:%M:%S%z", &tm);
-    tm.tm_isdst = -1;
-    t = mktime(&tm);
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+      is32bit = sizeof(void *) == 4;
+    });
 
-    return [NSDate dateWithTimeIntervalSince1970:t + [[NSTimeZone localTimeZone] secondsFromGMT]];
+    if (is32bit)
+    {
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+        [formatter setLocale:[NSLocale currentLocale]];
+        [formatter setDateFormat:format];
+
+        NSDate *parsedDate = [formatter dateFromString:value];
+
+        return parsedDate;
+    }
+    else
+    {
+        struct tm tm;
+        time_t t;
+
+        strptime([value UTF8String], "%Y-%m-%dT%H:%M:%S%z", &tm);
+        tm.tm_isdst = -1;
+        t = mktime(&tm);
+
+        return [NSDate dateWithTimeIntervalSince1970:t + [[NSTimeZone localTimeZone] secondsFromGMT]];
+    }
 }
 
 NSDate *MR_dateFromNumber(NSNumber *value, BOOL milliseconds)
