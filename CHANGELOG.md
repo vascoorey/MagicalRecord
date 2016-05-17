@@ -1,5 +1,40 @@
 # Changelog
 
+## Version 2.3.2
+
+This release fixes an issue where the OS X framework was being built with instrumentation data, and included in the binary builds posted to GitHub. It contains no other fixes over MagicalRecord v2.3.1.
+
+
+## Version 2.3.1
+
+- CocoaPods users who want to use:
+    - Shorthand method aliases should add `pod 'MagicalRecord/ShorthandMethodAliases'` to their Podfile, and run `pod update`
+    - CocoaLumberjack should add `pod 'MagicalRecord/CocoaLumberjack'` to their Podfile, and run `pod update`
+- Fixed a Core Data multithreading violation when setting a context's working name
+- Fixed the check for whether `NSPersistentStoreUbiquitousContentNameKey` is valid when using iCloud containers
+- Attempting to delete a `nil` managed object, or a managed object not present in the context will do nothing (previously it crashed)
+- Add a fix for CocoaLumberjack reporting duplicate definitions of LOG_MAYBE
+- Added error logging when the passed value for `relatedByAttribute` is invalid during a relationship import
+- Added more lightweight generics and nullability annotations
+
+
+## Version 2.3
+* Dynamic framework targets are provided for both OS X 10.8+ and iOS 8.0+
+* Logging is enabled by default, change the logging level using `+[MagicalRecord setLoggingLevel: MagicalRecordLogLevelOff];` — [see the documentation in the wiki](https://github.com/magicalpanda/MagicalRecord/wiki/Logging)
+* CocoaLumberjack 2.0 support
+* Enabling shorthand category method names can now be done by importing:
+    
+    ```objective-c
+    #import <MagicalRecord/MagicalRecord.h>
+    #import <MagicalRecord/MagicalRecord+ShorthandMethods.h>
+    #import <MagicalRecord/MagicalRecordShorthandMethodAliases.h>
+    ```
+    Then calling `+[MagicalRecord enableShorthandMethods]`.  
+    [See the documentation in the wiki](https://github.com/magicalpanda/MagicalRecord/wiki/Installing-MagicalRecord#shorthand-category-methods).
+    
+* Support for running with Core Data's concurrency debugging checks enabled
+* Many, many, many, many fixes to reported issues
+
 ## Version 2.2
 * Updated examples and fixed errors in README - [Tony Arnold](mailto:tony@thecocoabots.com)
 * Changes block saves to use child context of rootSavingContext so that large saves do not channel through the default context and block the main thread - r-peck
@@ -51,7 +86,7 @@
 * Added fetchAllWithDelegate: method for NSFRC `c0a1657` - [Saul Mora](mailto:saul@magicalpanda.com)
 * Fixed Issue #294 - MR_requestAllSortedBy:ascending:inContext: did not use correct context `3656e74` - [Stephen Vanterpool](mailto:stephen@vanterpool.net)
 * Bumping podspec version `fb81b5b` - [Stephen Vanterpool](mailto:stephen@vanterpool.net)
->>>>>>> release/2.1.0
+
 ## Version 2.0.7
 * Fix small error in README with regard to MR_SHORTHAND - [Maik Gosenshuis](mailto:maik@gosenshuis.nl)
 * Hide intended private cleanUpErrorHandling method - [Saul Mora](mailto:saul@magicalpanda.com)

@@ -5,11 +5,8 @@
 
 #import <XCTest/XCTest.h>
 #import <CoreData/CoreData.h>
-
-#define EXP_SHORTHAND
-#import "Expecta.h"
-
-#import "MagicalRecord.h"
+#import <Expecta/Expecta.h>
+#import <MagicalRecord/MagicalRecord.h>
 
 @interface MagicalRecordTestBase : XCTestCase
 

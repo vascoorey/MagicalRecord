@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0620"
+   LastUpgradeVersion = "0700"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,56 +14,51 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "905D07171A63DE190076B54E"
-               BuildableName = "MagicalRecord.framework"
-               BlueprintName = "MagicalRecord-iOS"
+               BlueprintIdentifier = "C7CF97AA17498414008D9D13"
+               BuildableName = "libMagicalRecord.a"
+               BlueprintName = "libMagicalRecord for iOS"
                ReferencedContainer = "container:MagicalRecord.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
-      buildConfiguration = "Debug">
+      codeCoverageEnabled = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C7CF97FE174984CA008D9D13"
-               BuildableName = "MagicalRecordTests-iOS.xctest"
-               BlueprintName = "MagicalRecordTests-iOS"
+               BuildableName = "libMagicalRecord for iOS Tests.xctest"
+               BlueprintName = "libMagicalRecord for iOS Tests"
                ReferencedContainer = "container:MagicalRecord.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "905D07171A63DE190076B54E"
-            BuildableName = "MagicalRecord.framework"
-            BlueprintName = "MagicalRecord-iOS"
-            ReferencedContainer = "container:MagicalRecord.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
+      <AdditionalOptions>
+      </AdditionalOptions>
    </TestAction>
    <LaunchAction
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
-      buildConfiguration = "Debug"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "905D07171A63DE190076B54E"
-            BuildableName = "MagicalRecord.framework"
-            BlueprintName = "MagicalRecord-iOS"
+            BlueprintIdentifier = "C7CF97AA17498414008D9D13"
+            BuildableName = "libMagicalRecord.a"
+            BlueprintName = "libMagicalRecord for iOS"
             ReferencedContainer = "container:MagicalRecord.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -77,20 +72,11 @@
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
+      buildConfiguration = "Release"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
-      buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "905D07171A63DE190076B54E"
-            BuildableName = "MagicalRecord.framework"
-            BlueprintName = "MagicalRecord-iOS"
-            ReferencedContainer = "container:MagicalRecord.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

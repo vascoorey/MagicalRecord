@@ -17,7 +17,7 @@
 
 - (void)testCreateFetchRequestForEntity
 {
-    NSFetchRequest *testRequest = [SingleRelatedEntity MR_requestAll];
+    NSFetchRequest *testRequest = [SingleRelatedEntity MR_requestAllInContext:[NSManagedObjectContext MR_defaultContext]];
 
     XCTAssertEqualObjects([[testRequest entity] name], NSStringFromClass([SingleRelatedEntity class]), @"Entity name should be the string representation of the entity's class");
 }
@@ -25,15 +25,15 @@
 - (void)testCanRequestFirstEntityWithPredicate
 {
     NSPredicate *testPredicate = [NSPredicate predicateWithFormat:@"mappedStringAttribute = 'Test Predicate'"];
-    NSFetchRequest *testRequest = [SingleRelatedEntity MR_requestFirstWithPredicate:testPredicate];
+    NSFetchRequest *testRequest = [SingleRelatedEntity MR_requestFirstWithPredicate:testPredicate inContext:[NSManagedObjectContext MR_defaultContext]];
 
     XCTAssertEqual([testRequest fetchLimit], (NSUInteger)1, @"Fetch limit should be 1, got: %tu", [testRequest fetchLimit]);
-    XCTAssertEqualObjects([testRequest predicate], [NSPredicate predicateWithFormat:@"mappedStringAttribute = 'Test Predicate'"], @"Predicate objects should be equal");
+    XCTAssertEqualObjects([testRequest predicate], testPredicate, @"Predicate objects should be equal");
 }
 
 - (void)testCreateRequestForFirstEntity
 {
-    NSFetchRequest *testRequest = [SingleRelatedEntity MR_requestFirstByAttribute:@"mappedStringAttribute" withValue:nil];
+    NSFetchRequest *testRequest = [SingleRelatedEntity MR_requestFirstByAttribute:@"mappedStringAttribute" withValue:nil inContext:[NSManagedObjectContext MR_defaultContext]];
 
     XCTAssertEqualObjects([[testRequest entity] name], NSStringFromClass([SingleRelatedEntity class]), @"Entity name should be the string representation of the entity's class");
     XCTAssertEqual([testRequest fetchLimit], (NSUInteger)1, @"Fetch limit should be 1, got: %tu", [testRequest fetchLimit]);
@@ -89,63 +89,79 @@
 
 - (void)testCanGetEntityDescriptionFromEntityClass
 {
-    NSEntityDescription *testDescription = [SingleRelatedEntity MR_entityDescription];
+    NSEntityDescription *testDescription = [SingleRelatedEntity MR_entityDescriptionInContext:[NSManagedObjectContext MR_defaultContext]];
 
     XCTAssertNotNil(testDescription, @"Entity description should not be nil");
 }
 
 - (void)testCanCreateEntityInstance
 {
-    id testEntity = [SingleRelatedEntity MR_createEntity];
+    [[NSManagedObjectContext MR_defaultContext] performBlockAndWait:^{
+        id testEntity = [SingleRelatedEntity MR_createEntityInContext:[NSManagedObjectContext MR_defaultContext]];
 
-    XCTAssertNotNil(testEntity, @"Entity should not be nil");
+        XCTAssertNotNil(testEntity, @"Entity should not be nil");
+    }];
 }
 
 - (void)testCanDeleteEntityInstance
 {
-    id testEntity = [SingleRelatedEntity MR_createEntity];
+    [[NSManagedObjectContext MR_defaultContext] performBlockAndWait:^{
+        id testEntity = [SingleRelatedEntity MR_createEntityInContext:[NSManagedObjectContext MR_defaultContext]];
 
-    [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
+        [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
 
-    XCTAssertFalse([testEntity isDeleted], @"Entity should not return true for isDeleted before MR_deleteEntity is sent");
+        XCTAssertFalse([testEntity isDeleted], @"Entity should not return true for isDeleted before MR_deleteEntity is sent");
 
-    [testEntity MR_deleteEntity];
+        [testEntity MR_deleteEntity];
 
-    XCTAssertNotNil(testEntity, @"Entity should not be nil after calling MR_deleteEntity");
-    XCTAssertTrue([testEntity isDeleted], @"Entity should return true for isDeleted before MR_deleteEntity is sent");
+        XCTAssertNotNil(testEntity, @"Entity should not be nil after calling MR_deleteEntity");
+        XCTAssertTrue([testEntity isDeleted], @"Entity should return true for isDeleted before MR_deleteEntity is sent");
+    }];
 }
 
 - (void)testCanSearchForNumberOfAllEntities
 {
     NSInteger numberOfTestEntitiesToCreate = 20;
 
-    [self p_createSampleData:numberOfTestEntitiesToCreate];
+    NSManagedObjectContext *context = [NSManagedObjectContext MR_defaultContext];
 
-    NSNumber *entityCount = [SingleRelatedEntity MR_numberOfEntities];
-    XCTAssertEqualObjects(entityCount, @(numberOfTestEntitiesToCreate), @"Expected numberOfEntities to be %zd, got %@", numberOfTestEntitiesToCreate, entityCount);
+    [context performBlockAndWait:^{
+        [self p_createSampleData:numberOfTestEntitiesToCreate inContext:context];
+        
+        NSNumber *entityCount = [SingleRelatedEntity MR_numberOfEntitiesWithContext:context];
+        XCTAssertEqualObjects(entityCount, @(numberOfTestEntitiesToCreate), @"Expected numberOfEntities to be %zd, got %@", numberOfTestEntitiesToCreate, entityCount);
+    }];
 }
 
 - (void)testCanSearchForNumberOfEntitiesWithPredicate
 {
     NSInteger numberOfTestEntitiesToCreate = 20;
 
-    [self p_createSampleData:numberOfTestEntitiesToCreate];
+    NSManagedObjectContext *context = [NSManagedObjectContext MR_defaultContext];
 
-    NSPredicate *searchFilter = [NSPredicate predicateWithFormat:@"mappedStringAttribute = '1'"];
-    NSNumber *entityCount = [SingleRelatedEntity MR_numberOfEntitiesWithPredicate:searchFilter];
-    XCTAssertEqualObjects(entityCount, @5, @"Should return a count of 5, got %@", entityCount);
+    [context performBlockAndWait:^{
+        [self p_createSampleData:numberOfTestEntitiesToCreate inContext:context];
+
+        NSPredicate *searchFilter = [NSPredicate predicateWithFormat:@"mappedStringAttribute = '1'"];
+        NSNumber *entityCount = [SingleRelatedEntity MR_numberOfEntitiesWithPredicate:searchFilter inContext:context];
+        XCTAssertEqualObjects(entityCount, @5, @"Should return a count of 5, got %@", entityCount);
+    }];
 }
 
 - (void)testRetrieveInstanceOfManagedObjectFromAnotherContextHasAPermanentObjectID
 {
     NSManagedObjectContext *defaultContext = [NSManagedObjectContext MR_defaultContext];
-    NSManagedObject *insertedEntity = [SingleRelatedEntity MR_createEntityInContext:defaultContext];
+    __block NSManagedObject *insertedEntity;
 
-    XCTAssertTrue(insertedEntity.objectID.isTemporaryID, @"Object ID should be temporary until saved");
+    [defaultContext performBlockAndWait:^{
+        insertedEntity = [SingleRelatedEntity MR_createEntityInContext:defaultContext];
 
-    [defaultContext MR_saveToPersistentStoreAndWait];
+        XCTAssertTrue(insertedEntity.objectID.isTemporaryID, @"Object ID should be temporary until saved");
 
-    XCTAssertFalse(insertedEntity.objectID.isTemporaryID, @"Object ID should be permanent after save");
+        [defaultContext MR_saveToPersistentStoreAndWait];
+
+        XCTAssertFalse(insertedEntity.objectID.isTemporaryID, @"Object ID should be permanent after save");
+    }];
 
     [MagicalRecord saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSManagedObject *localEntity = [insertedEntity MR_inContext:localContext];
@@ -184,14 +200,17 @@
 
 #pragma mark - Private Methods
 
-- (void)p_createSampleData:(NSInteger)numberOfTestEntitiesToCreate
+- (void)p_createSampleData:(NSInteger)numberOfTestEntitiesToCreate inContext:(NSManagedObjectContext *)context
 {
-    for (int i = 0; i < numberOfTestEntitiesToCreate; i++) {
-        SingleRelatedEntity *testEntity = [SingleRelatedEntity MR_createEntity];
-        testEntity.mappedStringAttribute = [NSString stringWithFormat:@"%d", i / 5];
-    }
+    [context performBlockAndWait:^{
+        for (int i = 0; i < numberOfTestEntitiesToCreate; i++)
+        {
+            SingleRelatedEntity *testEntity = [SingleRelatedEntity MR_createEntityInContext:context];
+            testEntity.mappedStringAttribute = [NSString stringWithFormat:@"%d", i / 5];
+        }
 
-    [[NSManagedObjectContext MR_defaultContext] MR_saveOnlySelfAndWait];
+        [context MR_saveOnlySelfAndWait];
+    }];
 }
 
 @end
