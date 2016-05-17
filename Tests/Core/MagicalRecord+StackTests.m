@@ -5,11 +5,10 @@
 
 #import <XCTest/XCTest.h>
 #import <CoreData/CoreData.h>
+#import <Expecta/Expecta.h>
 
-#define EXP_SHORTHAND
-#import "Expecta.h"
-
-#import "MagicalRecord.h"
+#import <MagicalRecord/MagicalRecord.h>
+#import "MagicalRecordTestHelpers.h"
 
 @interface MagicalRecordTests : XCTestCase
 
@@ -37,19 +36,18 @@
 
 - (void) testCreateDefaultCoreDataStack
 {
-    NSURL *testStoreURL = [NSPersistentStore MR_urlForStoreName:kMagicalRecordDefaultStoreFileName];
-    [[NSFileManager defaultManager] removeItemAtPath:[testStoreURL path] error:nil];
-    
     [MagicalRecord setupCoreDataStack];
     
     [self assertDefaultStack];
     
     NSPersistentStore *defaultStore = [NSPersistentStore MR_defaultPersistentStore];
+    NSURL *defaultStoreURL = defaultStore.URL;
 
-    XCTAssertTrue([[[defaultStore URL] absoluteString] hasSuffix:@".sqlite"], @"Default store URL must have an extension of 'sqlite'");
+    XCTAssertTrue([[defaultStoreURL absoluteString] hasSuffix:@".sqlite"], @"Default store URL must have an extension of 'sqlite'");
     XCTAssertEqual([defaultStore type], NSSQLiteStoreType, @"Default store should be of type NSSQLiteStoreType");
 
     [MagicalRecord cleanUp];
+    [MagicalRecordTestHelpers removeStoreFilesForStoreAtURL:defaultStoreURL];
 }
 
 - (void) testCreateInMemoryCoreDataStack
@@ -67,18 +65,19 @@
 - (void) testCreateSqliteStackWithCustomName
 {
     NSString *testStoreName = @"MyTestDataStore.sqlite";
-    
     NSURL *testStoreURL = [NSPersistentStore MR_urlForStoreName:testStoreName];
-    [[NSFileManager defaultManager] removeItemAtPath:[testStoreURL path] error:nil];
-    
+
     [MagicalRecord setupCoreDataStackWithStoreNamed:testStoreName];
     
     [self assertDefaultStack];
     
     NSPersistentStore *defaultStore = [NSPersistentStore MR_defaultPersistentStore];
     XCTAssertEqual([defaultStore type], NSSQLiteStoreType, @"Default store should be of type NSSQLiteStoreType");
+    XCTAssertEqualObjects(defaultStore.URL, testStoreURL, @"Default store should have the same URL as the one that was passed to it");
     XCTAssertTrue([[[defaultStore URL] absoluteString] hasSuffix:testStoreName], @"Default store URL expects to have a suffix of '%@'", testStoreName);
+
     [MagicalRecord cleanUp];
+    [MagicalRecordTestHelpers removeStoreFilesForStoreAtURL:testStoreURL];
 }
 
 - (void) customErrorHandler:(id)error;

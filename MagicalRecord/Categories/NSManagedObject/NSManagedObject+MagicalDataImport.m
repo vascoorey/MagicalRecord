@@ -5,10 +5,18 @@
 //  Copyright 2011 Magical Panda Software LLC. All rights reserved.
 //
 
-#import "CoreData+MagicalRecord.h"
-#import "NSObject+MagicalDataImport.h"
-#import "MagicalRecordLogging.h"
 #import <objc/runtime.h>
+#import "MagicalImportFunctions.h"
+#import "MagicalRecordLogging.h"
+#import "NSAttributeDescription+MagicalDataImport.h"
+#import "NSEntityDescription+MagicalDataImport.h"
+#import "NSManagedObject+MagicalDataImport.h"
+#import "NSManagedObject+MagicalFinders.h"
+#import "NSManagedObject+MagicalRecord.h"
+#import "NSManagedObjectContext+MagicalThreading.h"
+#import "NSObject+MagicalDataImport.h"
+#import "NSRelationshipDescription+MagicalDataImport.h"
+#import "NSString+MagicalDataImport.h"
 
 NSString *const kMagicalRecordImportCustomDateFormatKey = @"dateFormat";
 NSString *const kMagicalRecordImportDefaultDateFormatString = @"yyyy-MM-dd'T'HH:mm:ssz";
@@ -166,7 +174,7 @@ NSString *const kMagicalRecordImportAttributeUseDefaultValueWhenNotPresent = @"u
 
         NSRelationshipDescription *relationshipInfo = [relationships valueForKey:relationshipName];
 
-        NSString *lookupKey = [[relationshipInfo userInfo] valueForKey:kMagicalRecordImportRelationshipMapKey] ?: relationshipName;
+        NSString *lookupKey = [[relationshipInfo userInfo] objectForKey:kMagicalRecordImportRelationshipMapKey] ?: relationshipName;
 
         id relatedObjectData;
 
@@ -270,52 +278,53 @@ NSString *const kMagicalRecordImportAttributeUseDefaultValueWhenNotPresent = @"u
     __weak typeof(self) weakself = self;
     return [self MR_performDataImportFromObject:objectData
                               relationshipBlock:^(NSRelationshipDescription *relationshipInfo, id localObjectData) {
-        
-        NSManagedObject *relatedObject = [weakself MR_findObjectForRelationship:relationshipInfo withData:localObjectData];
-        
-        if (relatedObject == nil)
-        {
-            NSEntityDescription *entityDescription = [relationshipInfo destinationEntity];
-            relatedObject = [entityDescription MR_createInstanceInContext:[weakself managedObjectContext]];
-        }
-        [relatedObject MR_importValuesForKeysWithObject:localObjectData];
-        
-        if ((localObjectData) && (![localObjectData isKindOfClass:[NSDictionary class]]))
-        {
-			NSString * relatedByAttribute = [[relationshipInfo userInfo] objectForKey:kMagicalRecordImportRelationshipLinkedByKey] ?: MR_primaryKeyNameFromString([[relationshipInfo destinationEntity] name]);
-			
-            if (relatedByAttribute)
-            {
-				
-                if (![relatedObject MR_importValue:localObjectData forKey:relatedByAttribute])
-                {
-                    [relatedObject setValue:localObjectData forKey:relatedByAttribute];
-                }
-				
-            }
-        }
-        
-        [weakself MR_addObject:relatedObject forRelationship:relationshipInfo];
+                                  NSManagedObject *relatedObject = [weakself MR_findObjectForRelationship:relationshipInfo withData:localObjectData];
+
+                                  if (relatedObject == nil)
+                                  {
+                                      NSEntityDescription *entityDescription = [relationshipInfo destinationEntity];
+                                      relatedObject = [entityDescription MR_createInstanceInContext:[weakself managedObjectContext]];
+                                  }
+                                  if ([localObjectData isKindOfClass:[NSDictionary class]])
+                                  {
+                                      [relatedObject MR_importValuesForKeysWithObject:localObjectData];
+                                  }
+                                  else if (localObjectData)
+                                  {
+                                      NSString *relatedByAttribute = [relationshipInfo MR_primaryKey];
+
+                                      if (relatedByAttribute)
+                                      {
+                                          if (![relatedObject MR_importValue:localObjectData forKey:relatedByAttribute])
+                                          {
+                                              [relatedObject setValue:localObjectData forKey:relatedByAttribute];
+                                          }
+                                      }
+                                  }
+
+                                  [weakself MR_addObject:relatedObject forRelationship:relationshipInfo];
                               }];
 }
 
 + (id)MR_importFromObject:(id)objectData inContext:(NSManagedObjectContext *)context;
 {
-    NSAttributeDescription *primaryAttribute = [[self MR_entityDescriptionInContext:context] MR_primaryAttributeToRelateBy];
+    __block NSManagedObject *managedObject;
 
-    id value = [objectData MR_valueForAttribute:primaryAttribute];
+    [context performBlockAndWait:^{
+        NSAttributeDescription *primaryAttribute = [[self MR_entityDescriptionInContext:context] MR_primaryAttributeToRelateBy];
 
-    NSManagedObject *managedObject = nil;
-    if (primaryAttribute != nil)
-    {
-        managedObject = [self MR_findFirstByAttribute:[primaryAttribute name] withValue:value inContext:context];
-    }
-    if (managedObject == nil)
-    {
-        managedObject = [self MR_createEntityInContext:context];
-    }
+        if (primaryAttribute != nil)
+        {
+            id value = [objectData MR_valueForAttribute:primaryAttribute];
+            managedObject = [self MR_findFirstByAttribute:[primaryAttribute name] withValue:value inContext:context];
+        }
+        if (managedObject == nil)
+        {
+            managedObject = [self MR_createEntityInContext:context];
+        }
 
-    [managedObject MR_importValuesForKeysWithObject:objectData];
+        [managedObject MR_importValuesForKeysWithObject:objectData];
+    }];
 
     return managedObject;
 }

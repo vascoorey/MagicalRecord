@@ -5,7 +5,7 @@
 //  Copyright 2010 Magical Panda Software, LLC All rights reserved.
 //
 
-#import "CoreData+MagicalRecord.h"
+#import "MagicalRecord.h"
 
 NSString * const kMagicalRecordCleanedUpNotification = @"kMagicalRecordCleanedUpNotification";
 
@@ -96,9 +96,6 @@ NSString * const kMagicalRecordCleanedUpNotification = @"kMagicalRecordCleanedUp
 {
     if (self == [MagicalRecord class]) 
     {
-#ifdef MR_SHORTHAND
-        [self swizzleShorthandMethods];
-#endif
         [self setShouldAutoCreateManagedObjectModel:YES];
         [self setShouldAutoCreateDefaultPersistentStoreCoordinator:NO];
 #ifdef DEBUG

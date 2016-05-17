@@ -242,108 +242,26 @@
         expect([fetchedObject valueForKey:kTestAttributeKey]).to.beTruthy();
     }];
 
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Wait for managed object context"];
+
     [MagicalRecord saveWithBlock:^(NSManagedObjectContext *localContext) {
         NSManagedObject *changed = [localContext objectWithID:objectId];
         
         [changed setValue:@NO forKey:kTestAttributeKey];
     } completion:^(BOOL contextDidSave, NSError *error) {
-        [rootSavingContext performBlockAndWait:^{
+        [rootSavingContext performBlock:^{
             fetchedObject = [rootSavingContext objectWithID:objectId];
             expect(fetchedObject).toNot.beNil();
             expect([fetchedObject valueForKey:kTestAttributeKey]).to.beFalsy();
+
+            [expectation fulfill];
         }];
     }];
-}
 
-#pragma mark - Deprecated Tests
-// TA: 4th October 2014 — these tests never completes under Xcode 6, so I'm disabling it. It's removed entirely in MR 3.0.
-//
-//- (void)testCurrentThreadSynchronousSaveActionSaves
-//{
-//    __block NSManagedObjectID *objectId;
-//
-//    [MagicalRecord saveUsingCurrentThreadContextWithBlockAndWait:^(NSManagedObjectContext *localContext) {
-//        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
-//
-//        expect([inserted hasChanges]).to.beTruthy();
-//
-//        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
-//        objectId = [inserted objectID];
-//    }];
-//
-//    expect(objectId).toNot.beNil();
-//
-//    XCTestExpectation *rootSavingExpectation = [self expectationWithDescription:@"Root Saving Context Fetch Object"];
-//
-//    NSManagedObjectContext *rootSavingContext = [NSManagedObjectContext MR_rootSavingContext];
-//
-//    [rootSavingContext performBlock:^{
-//        NSError *fetchError;
-//        NSManagedObject *fetchedObject = [rootSavingContext existingObjectWithID:objectId error:&fetchError];
-//
-//        expect(fetchedObject).toNot.beNil();
-//        expect(fetchError).to.beNil();
-//        expect([fetchedObject hasChanges]).to.beFalsy();
-//
-//        [rootSavingExpectation fulfill];
-//    }];
-//
-//    [self waitForExpectationsWithTimeout:5.0f handler:nil];
-//}
-//
-//- (void)testCurrentThreadAsynchronousSaveActionSaves
-//{
-//    __block NSManagedObjectID *objectId;
-//
-//    XCTestExpectation *saveCompleteExpectation = [self expectationWithDescription:@"Save Completed"];
-//
-//    [MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
-//        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
-//
-//        expect([inserted hasChanges]).to.beTruthy();
-//
-//        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
-//        objectId = [inserted objectID];
-//        expect(objectId).toNot.beNil();
-//
-//    } completion:^(BOOL contextDidSave, NSError *error) {
-//        expect(contextDidSave).to.beTruthy();
-//        expect(error).to.beNil();
-//
-//        [saveCompleteExpectation fulfill];
-//    }];
-//
-//    [self waitForExpectationsWithTimeout:5.0f handler:nil];
-//
-//    XCTestExpectation *rootSavingExpectation = [self expectationWithDescription:@"Root Saving Context Fetch Object"];
-//    NSManagedObjectContext *rootSavingContext = [NSManagedObjectContext MR_rootSavingContext];
-//
-//    [rootSavingContext performBlock:^{
-//        NSManagedObject *fetchedObject = [rootSavingContext objectRegisteredForID:objectId];
-//
-//        expect(fetchedObject).toNot.beNil();
-//        expect([fetchedObject hasChanges]).to.beFalsy();
-//
-//        [rootSavingExpectation fulfill];
-//    }];
-//
-//    [self waitForExpectationsWithTimeout:5.0f handler:nil];
-//}
-//
-//- (void)testCurrentThreadAsynchronousSaveActionCallsCompletionBlockOnTheMainThread
-//{
-//    XCTestExpectation *saveCompleteExpectation = [self expectationWithDescription:@"Save Completed"];
-//
-//    [MagicalRecord saveUsingCurrentThreadContextWithBlock:^(NSManagedObjectContext *localContext) {
-//        [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
-//    } completion:^(BOOL contextDidSave, NSError *error) {
-//        // Ignore the success state — we only care that this block is executed on the main thread
-//        expect([NSThread isMainThread]).to.beTruthy();
-//
-//        [saveCompleteExpectation fulfill];
-//    }];
-//
-//    [self waitForExpectationsWithTimeout:5.0f handler:nil];
-//}
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError * _Nullable error) {
+        MRLogError(@"Managed Object Context performBlock: timed out due to error: %@", [error localizedDescription]);
+    }];
+
+}
 
 @end

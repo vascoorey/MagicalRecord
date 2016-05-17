@@ -5,8 +5,12 @@
 //  Copyright 2010 Magical Panda Software, LLC All rights reserved.
 //
 
-#import "CoreData+MagicalRecord.h"
+#import "NSPersistentStoreCoordinator+MagicalRecord.h"
+#import "NSPersistentStore+MagicalRecord.h"
+#import "NSManagedObjectModel+MagicalRecord.h"
+#import "MagicalRecord+ErrorHandling.h"
 #import "MagicalRecordLogging.h"
+
 
 static NSPersistentStoreCoordinator *defaultCoordinator_ = nil;
 NSString * const kMagicalRecordPSCDidCompleteiCloudSetupNotification = @"kMagicalRecordPSCDidCompleteiCloudSetupNotification";
@@ -71,18 +75,23 @@ NSString * const kMagicalRecordPSCMismatchCouldNotRecreateStore = @"kMagicalReco
 
 - (NSPersistentStore *) MR_addSqliteStoreNamed:(id)storeFileName withOptions:(__autoreleasing NSDictionary *)options
 {
+    return [self MR_addSqliteStoreNamed:storeFileName configuration:nil withOptions:options];
+}
+
+- (NSPersistentStore *) MR_addSqliteStoreNamed:(id)storeFileName configuration:(NSString *)configuration withOptions:(__autoreleasing NSDictionary *)options
+{
     NSURL *url = [storeFileName isKindOfClass:[NSURL class]] ? storeFileName : [NSPersistentStore MR_urlForStoreName:storeFileName];
     NSError *error = nil;
     
     [self MR_createPathToStoreFileIfNeccessary:url];
     
     NSPersistentStore *store = [self addPersistentStoreWithType:NSSQLiteStoreType
-                                                  configuration:nil
+                                                  configuration:configuration
                                                             URL:url
                                                         options:options
                                                           error:&error];
     
-    if (!store) 
+    if (!store)
     {
         if ([MagicalRecord shouldDeleteStoreOnModelMismatch])
         {
@@ -99,7 +108,7 @@ NSString * const kMagicalRecordPSCMismatchCouldNotRecreateStore = @"kMagicalReco
                 [[NSFileManager defaultManager] removeItemAtURL:url error:&deleteStoreError];
                 [[NSFileManager defaultManager] removeItemAtURL:shmSidecar error:nil];
                 [[NSFileManager defaultManager] removeItemAtURL:walSidecar error:nil];
-
+                
                 MRLogWarn(@"Removed incompatible model version: %@", [url lastPathComponent]);
                 if(deleteStoreError) {
                     [[NSNotificationCenter defaultCenter] postNotificationName:kMagicalRecordPSCMismatchCouldNotDeleteStore object:nil userInfo:@{@"Error":deleteStoreError}];
@@ -133,11 +142,14 @@ NSString * const kMagicalRecordPSCMismatchCouldNotRecreateStore = @"kMagicalReco
 
 - (void) MR_addiCloudContainerID:(NSString *)containerID contentNameKey:(NSString *)contentNameKey storeIdentifier:(id)storeIdentifier cloudStorePathComponent:(NSString *)subPathComponent completion:(void(^)(void))completionBlock
 {
-    NSAssert([contentNameKey containsString:@"."] == NO, @"NSPersistentStoreUbiquitousContentNameKey cannot contain a period.");
+    if (contentNameKey.length > 0)
+    {
+        NSAssert([contentNameKey rangeOfString:@"."].location == NSNotFound, @"NSPersistentStoreUbiquitousContentNameKey cannot contain a period.");
+    }
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
-        NSURL *cloudURL = [NSPersistentStore MR_cloudURLForUbiqutiousContainer:containerID];
+        NSURL *cloudURL = [NSPersistentStore MR_cloudURLForUbiquitousContainer:containerID];
         if (subPathComponent)
         {
             cloudURL = [cloudURL URLByAppendingPathComponent:subPathComponent];
